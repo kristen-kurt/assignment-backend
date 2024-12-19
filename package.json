@@ -3,7 +3,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "vercel-build": "composer install --optimize-autoloader --no-dev && php artisan config:cache && php artisan route:cache"
     },
     "devDependencies": {
         "autoprefixer": "^10.4.20",
