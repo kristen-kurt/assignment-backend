@@ -65,9 +65,10 @@ class FetchArticles extends Command
                 foreach ($articles as $articleData) {
 
                     $urlToImage = $articleData['urlToImage'] ?? null;
-                    $category = $articleData['sectionName'] ?? null;
+                    $category = $articleData['sectionName'] ?? $articleData['source']['id'];
                     $url = $articleData['webUrl'] ?? $articleData['url'];
                     $articleTitle = $articleData['webTitle'] ?? $articleData['title'];
+                    $sourceName = $articleData['pillarName'] ?? $articleData['source']['name'];
 
                     $originalPublishedDate = $articleData['webPublicationDate'] ?? $articleData['publishedAt']; // ISO 8601 format
                     $convertedPublishedDate = Carbon::parse($originalPublishedDate)->format('Y-m-d H:i:s');
