@@ -36,3 +36,9 @@ Route::post('/logout', function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/get-all-articles', [ArticleController::class, 'getAllArticles']);
 
+Route::get('/articles/filter', [ArticleController::class, 'filterArticles']);
+Route::get('/categories', [ArticleController::class, 'getCategories']);
+Route::get('/sources', [ArticleController::class, 'getSources']);
+
+
+

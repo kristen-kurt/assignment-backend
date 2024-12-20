@@ -65,6 +65,7 @@ class FetchArticles extends Command
                 foreach ($articles as $articleData) {
 
                     $urlToImage = $articleData['urlToImage'] ?? null;
+                    $author = $articleData['author'] ?? null;
                     $category = $articleData['sectionName'] ?? $articleData['source']['id'];
                     $url = $articleData['webUrl'] ?? $articleData['url'];
                     $articleTitle = $articleData['webTitle'] ?? $articleData['title'];
@@ -80,6 +81,7 @@ class FetchArticles extends Command
                             'article_title' => $articleTitle,
                             'category' => $category,
                             'url' => $url,
+                            'author' => $author,
                             'image_url' => $urlToImage,
                             'published_at' => $convertedPublishedDate,
                         ]
