@@ -4,41 +4,44 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\UserPreferenceController;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Http\Middleware\Authenticate as JWTAuthenticate;
 
-
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
 Route::post('/login', function (Request $request) {
     $credentials = $request->only('email', 'password');
-
+   
     if (Auth::attempt($credentials)) {
-        // User authenticated successfully
+        $user = Auth::user();
+        $token = JWTAuth::fromUser($user);
+
         return response()->json([
             'message' => 'Login successful!',
+            'token' => $token,
         ]);
     } else {
         return response()->json([
             'message' => 'Invalid login credentials!',
+
         ], 401);
     }
 });
 
-Route::post('/logout', function () {
-    auth()->logout(); // For session-based authentication
+Route::post('/register', [AuthController::class, 'register']);
 
-    return response()->json([
-        'message' => 'Successfully logged out!',
-    ]);
+Route::middleware(JWTAuthenticate::class)->group(function () {
+    Route::get('/user', [AuthController::class, 'getUser']);
+    Route::get('/get-all-articles', [ArticleController::class, 'getAllArticles']);
+    Route::get('/categories', [ArticleController::class, 'getCategories']);
+    Route::get('/get-categories-by-source-id', [ArticleController::class, 'getCategoriesBySourceId']);
+    Route::get('/sources', [ArticleController::class, 'getSources']);
+    Route::get('/authors', [ArticleController::class, 'getAuthors']);
+    Route::get('/preferences', [UserPreferenceController::class, 'getPreferences']);
+    Route::post('/preferences', [UserPreferenceController::class, 'savePreferences']);
 });
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::get('/get-all-articles', [ArticleController::class, 'getAllArticles']);
 
-Route::get('/articles/filter', [ArticleController::class, 'filterArticles']);
-Route::get('/categories', [ArticleController::class, 'getCategories']);
-Route::get('/sources', [ArticleController::class, 'getSources']);
 
 
 

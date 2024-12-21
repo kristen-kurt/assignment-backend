@@ -96,6 +96,7 @@ return [
     */
     'guardian_api_key' =>  env('GUARDIAN_API_KEY', '03acc637-4eb5-42cc-8cf7-d93180c6504f'),
     'news_api_key' =>  env('NEWS_API_KEY', '1e52ff463fe3413aaf2fa695cf755dd6'),
+    'newyork_times_api_key' =>  env('NEWYORK_TIMES_API_KEY', '7xLNdnFtRfI7qnSr4RAc7EKL0neAWdbA'),
 
     'cipher' => 'AES-256-CBC',
 

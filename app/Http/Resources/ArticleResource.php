@@ -19,10 +19,9 @@ class ArticleResource extends JsonResource
             "title" => $this->article_title,
             "img" => $this->image_url,
             "source_url" => $this->url,
-            "author" => $this->author,
+            "author" => $this->author->name,
             "date" => $this->published_at
 
         ];
-        // return parent::toArray($request);
     }
 }

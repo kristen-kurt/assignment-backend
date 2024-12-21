@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Source;
+use App\Models\Author;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
@@ -12,9 +13,15 @@ use App\Http\Resources\ArticleResource;
 
 class ArticleController extends Controller
 {
-    public function getAllArticles(): JsonResponse
-    {
-        $articles = Article::paginate(12);
+
+    public function getAllArticles(Request $request): JsonResponse
+    {   
+       if( isset($request->category_id) || isset($request->source_id)){
+         $articles = $this->getArticlesWithNoPreferences($request);
+       }
+       else {
+        $articles =  $this->getArticlesWithPreferences($request);
+       }
         return response()->json([
             'status' => 'success',
             'data' => ArticleResource::collection($articles->items()),
@@ -26,64 +33,68 @@ class ArticleController extends Controller
             ],
         ], 200);
     }
+    private function getArticlesWithNoPreferences(Request $request){
+        $category_id = (int)$request->category_id;
+        $source_id = (int)$request->source_id;
+        $keyword = $request->keyword;
 
-    public function filterArticles(Request $request): JsonResponse
-    {
-        $category=null;$source=null;$dateFilter=null;
-        $validated = $request->validate(['keyword' => ['nullable', 'string', 'max:255']]);
-        if(isset($request->category))
-        {
-            $validated = $request->validate([
-                'category' => ['required', 'string', 'max:255']
-            ]);
-            $category = $validated['category'] ;
+        $startAndEndDate = $this->getStartAndEndDate($request->selected_date);
 
+        $query = Article::query();
+        if ($category_id) {
+            $query->where('category_id', $category_id);
         }
-        if(isset($request->source))
-        {
-            $validated = $request->validate([
-                'source' => ['required', 'string', 'max:255']
-            ]);
-            $source = $validated['source'] ;
-
+        if ($source_id) {
+            $query->where('source_id', $source_id);
         }
-        if(isset($request->date_filter))
-        {
-            $validated = $request->validate([
-                'date_filter' => ['required', 'string', 'max:255']
-            ]);
-            $dateFilter = $validated['date_filter'] ;
+        if ($keyword) {
+            $query->where('article_title', 'LIKE', "%{$keyword}%");
         }
+        if ($request->selected_date) {
+            $query->whereBetween('published_at', [$startAndEndDate['startDate'], $startAndEndDate['endDate']]);
+        }
+        $articles = $query->orderBy('published_at','desc')->paginate(12);
         
-        $keyword = $validated['keyword'] ?? null;
-        
+        return $articles;
+    }
+    private function getArticlesWithPreferences(Request $request){
+        $user = auth()->user();
+
+        $categoryIds = $user->categories->pluck('id')->toArray();
+        $sourceIds = $user->sources->pluck('id')->toArray();
+        $authorIds = $user->authors->pluck('id')->toArray();
+        $keyword = $request->keyword;
+
+        $startAndEndDate = $this->getStartAndEndDate($request->selected_date);
+
         $articles = Article::query()
-            ->when($category, function ($query, $category) {
-                $query->where('category', $category);
-            })
-            ->when($keyword, function ($query, $keyword) {
+            ->when(!empty($keyword), function ($query) use ($keyword) {
                 $query->where('article_title', 'LIKE', "%{$keyword}%");
             })
-            ->when($source, function ($query, $source) {
-                $query->where('site_name', $source);
+            ->when(!empty($request->selected_date), function ($query) use ($startAndEndDate) {
+                $query->whereBetween('published_at', [$startAndEndDate['startDate'], $startAndEndDate['endDate']]);
             })
-            ->when($dateFilter, function ($query, $dateFilter) {
-                if($dateFilter === 'Today')
-                {
-                    $query->whereDate('published_at', Carbon::today());
-                }
-                if($dateFilter === 'Yesterday')
-                {
-                    $query->whereDate('published_at', Carbon::yesterday());
-                }
+            ->when(!empty($categoryIds) || !empty($authorIds), function ($query) use ($categoryIds, $authorIds) {
+                $query->where(function ($subQuery) use ($categoryIds, $authorIds) {
+                    if (!empty($categoryIds)) {
+                        $subQuery->whereIn('category_id', $categoryIds);
+                    }
+                    if (!empty($authorIds)) {
+                        $subQuery->orWhereIn('author_id', $authorIds);
+                    }
+                });
             })
-            ->whereDate('created_at', Carbon::today())
-            ->get();
+            ->orderBy('published_at', 'desc')
+            ->paginate(12);
 
+        return $articles;
+    }
+    public function getSources(){
+        $sources = Source::all();
         return response()->json([
-            'success' => true,
-            'data' => $articles,
-        ]);
+            'status' => 'success',
+            'data' => $sources,
+        ], 200);
     }
     public function getCategories(){
         $categories = Category::all();
@@ -92,11 +103,41 @@ class ArticleController extends Controller
             'data' => $categories,
         ], 200);
     }
-    public function getSources(){
-        $sources = Source::all();
+    public function getCategoriesBySourceId(Request $request){
+        $source_id = $request->source_id;
+
+        $source = Source::find($source_id);
+        $categories = $source->categories;
         return response()->json([
             'status' => 'success',
-            'data' => $sources,
+            'data' => $categories,
         ], 200);
+    }
+    public function getAuthors(Request $request){
+        $source_id = $request->source_id;
+
+        $source = Source::find($source_id);
+        $authors = $source->authors;
+        return response()->json([
+            'status' => 'success',
+            'data' => $authors,
+        ], 200);
+    }
+    private function getStartAndEndDate($selected_date){
+        $startDate;
+        $endDate;
+        if($selected_date === 'Today'){
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+        }
+        elseif($selected_date === 'This Week'){
+            $startDate = Carbon::now()->startOfWeek();
+            $endDate = Carbon::now()->endOfWeek();
+        }
+        else{
+            $startDate = Carbon::now()->startOfMonth();
+            $endDate = Carbon::now()->endOfMonth();
+        }
+        return ["startDate" => $startDate, "endDate" => $endDate];
     }
 }
