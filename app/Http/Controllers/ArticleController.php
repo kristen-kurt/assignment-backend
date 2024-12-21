@@ -39,7 +39,7 @@ class ArticleController extends Controller
         $keyword = $request->keyword;
 
         $startAndEndDate = $this->getStartAndEndDate($request->selected_date);
-
+        
         $query = Article::query();
         if ($category_id) {
             $query->where('category_id', $category_id);
@@ -127,17 +127,18 @@ class ArticleController extends Controller
         $startDate;
         $endDate;
         if($selected_date === 'Today'){
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->endOfDay();
+            $startDate = Carbon::now()->startOfDay()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfDay()->format('Y-m-d');
         }
         elseif($selected_date === 'This Week'){
-            $startDate = Carbon::now()->startOfWeek();
-            $endDate = Carbon::now()->endOfWeek();
+            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
         }
         else{
-            $startDate = Carbon::now()->startOfMonth();
-            $endDate = Carbon::now()->endOfMonth();
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
         }
+        // dd($startDate, $endDate);
         return ["startDate" => $startDate, "endDate" => $endDate];
     }
 }
