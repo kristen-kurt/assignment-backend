@@ -11,14 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('user_author')) {
-            Schema::create('user_author', function (Blueprint $table) {
+        if (!Schema::hasTable('authors')) {
+            Schema::create('authors', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('user_id')->constrained()->onDelete('cascade');
-                $table->foreignId('author_id')->constrained()->onDelete('cascade');
+                $table->string('name');
+                $table->unsignedBigInteger('source_id')->nullable();
+                $table->foreign('source_id')
+                    ->references('id')
+                    ->on('sources')
+                    ->onDelete('cascade');
                 $table->timestamps();
             });
-        }
+         }
     }
 
     /**
@@ -26,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_author');
+        Schema::dropIfExists('authors');
     }
 };

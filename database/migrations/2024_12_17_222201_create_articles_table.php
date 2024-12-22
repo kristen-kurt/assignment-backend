@@ -11,15 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('articles', function (Blueprint $table) {
-            $table->id();
-            $table->string('site_name');
-            $table->string('article_title');
-            $table->string('category');
-            $table->string('url');
-            $table->timestamp('published_at');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('articles')) {
+            Schema::create('articles', function (Blueprint $table) {
+                $table->bigIncrements('id')->unsigned();
+                $table->bigInteger('author_id')->unsigned()->nullable();
+                $table->bigInteger('category_id')->unsigned()->nullable();
+                $table->bigInteger('source_id')->unsigned()->nullable();
+                $table->string('article_title');
+                $table->string('image_url')->nullable();
+                $table->string('url');
+                $table->timestamp('published_at');
+                $table->timestamps();
+            
+                // Define foreign key constraints
+                $table->foreign('author_id')->references('id')->on('authors')->onDelete('cascade');
+                $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+                $table->foreign('source_id')->references('id')->on('sources')->onDelete('cascade');
+            });
+        }
     }
 
     /**

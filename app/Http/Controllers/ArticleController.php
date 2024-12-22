@@ -127,18 +127,17 @@ class ArticleController extends Controller
         $startDate;
         $endDate;
         if($selected_date === 'Today'){
-            $startDate = Carbon::now()->startOfDay()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfDay()->format('Y-m-d');
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
         }
         elseif($selected_date === 'This Week'){
-            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+            $startDate = Carbon::now()->startOfWeek();
+            $endDate = Carbon::now()->endOfWeek();
         }
         else{
-            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+            $startDate = Carbon::now()->startOfMonth();
+            $endDate = Carbon::now()->endOfMonth();
         }
-        // dd($startDate, $endDate);
         return ["startDate" => $startDate, "endDate" => $endDate];
     }
 }
